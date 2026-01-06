@@ -1,8 +1,11 @@
 package com.pm.patientservice.service;
 
 import java.util.List;
+import java.util.UUID;
+import java.time.LocalDate;
 
 import com.pm.patientservice.exception.EmailAlreadyExistsException;
+import com.pm.patientservice.exception.PatientNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.pm.patientservice.dto.PatientRequestDTO;
@@ -37,6 +40,23 @@ public class PatientService {
         Patient newPatient = patientRepository.save(parsedBody);
         return PatientMapper.toDTO(newPatient);
         // return PatientMapper.toDTO(newPatient);
+    }
+
+
+    public PatientResponseDTO updatePatient(UUID id,  PatientRequestDTO body) {
+        Patient patient =  patientRepository.findById(id).orElseThrow(() -> new PatientNotFoundException("Patient not found with ID: " + id));
+
+        if(patientRepository.existsByEmail(body.getEmail())) {
+            throw new EmailAlreadyExistsException("A patient with email " + body.getEmail() + " already exists.");
+        }
+
+        patient.setName(body.getName());
+        patient.setEmail(body.getEmail());
+        patient.setAddress(body.getAddress());
+        patient.setDateOfBirth(LocalDate.parse(body.getDateOfBirth()));
+
+        Patient data = patientRepository.save(patient);
+        return PatientMapper.toDTO(data);
     }
 
 }
